@@ -1,0 +1,22 @@
+{
+  "name": "downloadImages",
+  "version": "1.0.0",
+  "description": "Image scraper",
+  "main": "downloadImages",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/parenparen/downloadImages"
+  },
+  "author": "Derek Mueller",
+  "bugs": {
+    "url": "https://github.com/parenparen/downloadImages"
+  },
+  "homepage": "https://github.com/parenparen/downloadImages",
+  "dependencies": {
+    "cheerio": "",
+    "q": ""
+  }
+}

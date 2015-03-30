@@ -1,0 +1,108 @@
+#!/usr/bin/node
+
+var exec = require ('child_process').exec,
+    exit = process.exit,
+    cheerio = require ('cheerio'),
+    Q = require ('q'),
+    fs = require ('fs')
+    ;
+
+Q.longStackSupport = true;
+
+var WebScraper = (function () {
+
+function WebScraper () {
+    
+};
+
+return WebScraper;
+
+}) ();
+
+
+var ImageScraper = (function () {
+
+function ImageScraper (url, dir) {
+    this.url = url; 
+    this.dir = dir;
+};
+
+ImageScraper.prototype = Object.create (WebScraper.prototype);
+
+ImageScraper.prototype.getPage = function () {
+    var url = this.url;
+    return Q.Promise (function (resolve) { 
+        exec ('curl ' + url, function (err, out) {
+            resolve (out);
+        });
+    });
+};
+
+ImageScraper.prototype.scrapeImageUrls = function (page) {
+//    var urls = [];
+//    var regex = /img[^>]*src="([^ ]*[^\\])"/g;
+//    do {
+//        var match = regex.exec (page);
+//        if (match) {
+//            urls.push (match[1].replace (/^\/\//, ''));
+//        }
+//    } while (match !== null);
+    var $ = cheerio.load (page)
+    var urls = [];
+    $('html').find ('img').map (function (i, elem) {
+        urls.push ($(elem).attr ('src'));
+    });
+    return Q.Promise (function (resolve) { resolve (urls); });
+};
+
+ImageScraper.prototype.downloadImages = function (urls) {
+    var dir = this.dir;
+    var dirFlag = typeof dir === 'undefined' ? '' : '-P ' + dir; 
+    return Q.Promise (function (resolve) { 
+        exec ('wget ' + dirFlag + ' ' + urls.join (' '), function (err, out) {
+            resolve (out);
+        });
+    });
+};
+
+return ImageScraper;
+
+}) ();
+
+var App = (function () {
+
+function App () {
+    this.parseArgs ();
+    var imageScraper = new ImageScraper (this.options.u, this.options['dest-dir']);
+    imageScraper
+        .getPage ()
+        .then (imageScraper.scrapeImageUrls.bind (imageScraper))
+        .then (imageScraper.downloadImages.bind (imageScraper))
+        .catch (function (error) {
+            /**/console.log (error); console.log (error.stack);
+        });
+};
+
+App.prototype.parseArgs = function () {
+    var getOpt = require('node-getopt').create([
+        ['', 'dest-dir[=ARG]' , 'destination directory'],
+        ['u', '=' , 'page to scrape'],
+    ])          
+    .bindHelp();
+
+    var opt = getOpt.parseSystem();
+    if (!opt.options.u) {
+        getOpt.showHelp ();
+        process.exit ();
+    }
+
+    this.options = opt.options;
+};
+
+return App;
+
+}) ();
+
+
+new App ();
+
