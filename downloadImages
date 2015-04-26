@@ -38,19 +38,19 @@ ImageScraper.prototype.getPage = function () {
     });
 };
 
+ImageScraper.prototype.getScheme = function () {
+    return this.url.match (/^https/) ? 'https' : 'http';
+};
+
 ImageScraper.prototype.scrapeImageUrls = function (page) {
-//    var urls = [];
-//    var regex = /img[^>]*src="([^ ]*[^\\])"/g;
-//    do {
-//        var match = regex.exec (page);
-//        if (match) {
-//            urls.push (match[1].replace (/^\/\//, ''));
-//        }
-//    } while (match !== null);
+    var that = this;
     var $ = cheerio.load (page)
     var urls = [];
     $('html').find ('img').map (function (i, elem) {
         urls.push ($(elem).attr ('src'));
+    });
+    urls = urls.map (function (url) {
+        return url.match (/^\/\//) ? that.getScheme () + ':' + url : url;
     });
     return Q.Promise (function (resolve) { resolve (urls); });
 };
